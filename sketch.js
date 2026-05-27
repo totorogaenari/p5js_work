@@ -2,21 +2,20 @@ let inputBox; //입력창
 let words = []; //단어 목록
 let score = 0; 
 let mainCharIcon;
-let monster2Icon;
 let mainPixel;
 let mainPixel2;
 let mainPixel3;
-let monster_2;
+let monster_1;
 let message;
-let smallMonster2;
+let smallMoster1;
 let player_effect1;
 let player_effect2;
 let player_effect3;
 let speechBubble;
 let currentBossDialogue = "";
-let layer;
+let gameState = "play";
 
-let bg2;
+let bg;
 let ending_bg;
 
 let attackAnim = false;
@@ -37,7 +36,6 @@ let shield;
 
 let bossHP = 100;
 let playerHP = 100;
-
 
 let pendingDamage = 0;
 let damageTimer = 0;
@@ -63,15 +61,6 @@ let bloodEffects = [];
 
 let screenShake = 0;
 
-let frontLineX;
-let gameOver = false;
-
-const DEAD_LINE = 120; // 전선 패배선
-
-let bossDead = false;
-let bossDeathTimer = 0;
-let fadeAlpha = 0;
-
 const wordList = [
   "사과",
   "조용한",
@@ -83,11 +72,10 @@ const wordList = [
 
 //말풍선 대사
 let bossDialogues = [
-  { hp: 85, text: "맥박이 빠르군. 공포인가?" },
-  { hp: 60, text: "면역 개체인가? \n실험 결과를 수정해야겠어." },
-  { hp: 30, text: "왜 감염되지 않는 거지…?" },
-  { hp: 10,  text: "예상보다 오래 버티는군." },
-  { hp: 1,  text: "격리 실패. 전원 처분한다…" }
+  { hp: 85, text: "전쟁은 곧 신의 언어다." },
+  { hp: 60, text: "이건 전쟁이다. \n아름다운 전쟁이다." },
+  { hp: 30, text: "왜 쓰러지지 않는가… \n이것도 신의 뜻인가?" },
+  { hp: 10,  text: "심판은 아직 \n끝나지 않았다!!!" }
 ];
 //몬스터 공격시 대사
 let playerAttackLines = [
@@ -96,7 +84,7 @@ let playerAttackLines = [
 ];
 //몬스터 피격시 대사
 let playerHitLines = [
-  "흥미로운 저항이군…"
+  "크윽!!"
 ];
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -113,22 +101,19 @@ function setup() {
 
   // 단어 생성
   setInterval(makeWord, 3000);
-  
-  frontLineX = windowWidth/2;
 }
 
 function preload() {
-  bg2 = loadImage("bg2.png")
+  bg = loadImage("bg.png")
   ending_bg = loadImage("ending_bg.png")
   mainCharIcon = loadImage("mainCharIcon.png")
-  monster2Icon = loadImage(" monster2Icon.png")
   mainPixel = loadImage("mainPixel.png")
   mainPixel2 = loadImage("mainPixel2.png")
   mainPixel3 = loadImage("mainPixel3.png")
   
-  monster_2 = loadImage("monster2.png")
+  monster_1 = loadImage("monster1.png")
   message = loadImage("message.png")
-  smallMonster2 = loadImage("smallMonster2.png")
+  smallMonster1 = loadImage("smallMonster1.png")
   player_effect1 = loadImage("player_effect1.png")
   player_effect2 = loadImage("player_effect2.png")
   player_effect3 = loadImage("player_effect3.png")
@@ -137,104 +122,88 @@ function preload() {
   monster_attack3 = loadImage("monster_attack3.png")
   shield = loadImage("shield.png")
   speechBubble = loadImage("bubble.png")
-  layer = loadImage("layer.gif")
 }
 
 function draw() {
 
-  // 게임오버 체크
-  if (playerHP <= 0) {
+  if (gameState === "play") {
+    if (inputBox) inputBox.show(); 
+    let shakeX = 0;
+    let shakeY = 0;
+
+    if (screenShake > 0) {
+      shakeX = random(-screenShake, screenShake);
+      shakeY = random(-screenShake, screenShake);
+      screenShake *= 0.9;
+    }
+
+    push();
+    translate(shakeX, shakeY);
+
+    bossHP = constrain(bossHP, 0, 100);
+    playerHP = constrain(playerHP, 0, 100);
+
+    stage1();
+    monster1();
+    player();
+    drawShield();
+    handlePendingDamage();
+    drawBlood();
+
+    updateBossDialogue();
+    bossAttackSystem();
+    updateMonsterAttackAnimation();
+
+    if (frameCount % 120 === 0) {
+      smallMonsterAttack();
+    }
+
+    updateAttackAnimation();
+    pop();
+    drawMessage();
+
+    // 상태 전환만 하고 종료 안 함
+    if (playerHP <= 0) {
+      gameState = "lose";
+    }
+
+    if (bossHP <= 0) {
+      gameState = "win";
+    }
+  }
+
+  else if (gameState === "lose") {
+    if (inputBox) inputBox.hide(); 
     ending2();
-    return;
   }
 
-  // 화면 흔들림 적용
-  let shakeX = 0;
-  let shakeY = 0;
-
-  if (screenShake > 0) {
-    shakeX = random(-screenShake, screenShake);
-    shakeY = random(-screenShake, screenShake);
-    screenShake *= 0.9;
-  }
-
-  push();
-  translate(shakeX, shakeY);
-
-  bossHP = constrain(bossHP, 0, 100);
-  playerHP = constrain(playerHP, 0, 100);
-
-  stage2();
-  monster2();
-  player();
-  drawShield(); 
-  handlePendingDamage(); 
-
-  drawBlood();
-
-  updateBossDialogue();
-  bossAttackSystem();
-  updateMonsterAttackAnimation();
-
-  updateFrontLine();
-  drawFrontLine();
-  checkGameOver();
-  updateBossDeathScene();
-
-  updateAttackAnimation();
-
-  pop();
-
-  drawMessage();
-}
-
-function checkGameOver() {
-
-  if (frontLineX <= DEAD_LINE) {
-
-    gameOver = true;
-
-    playerHP = 0;
-  }
-}
-
-//전선 시스템
-function updateFrontLine() {
-
-  // 자동으로 계속 왼쪽 압박
-  frontLineX -= 0.15;
-
-  // 화면 제한
-  frontLineX = constrain(
-    frontLineX,
-    0,
-    width
-  );
-}
-
-function updateBossDeathScene() {
-
-  if (!bossDead) return;
-
-  let elapsed = millis() - bossDeathTimer;
-
-
-  if (elapsed > 2000) {
-
-    fadeAlpha += 2;
-
-    fill(0, fadeAlpha);
-    rectMode(CORNER);
-    rect(0, 0, width, height);
-  }
-
-  // 총 5초 뒤 승리씬
-  if (elapsed > 5000) {
-
+  else if (gameState === "win") {
     winScene();
-
-    noLoop();
+    if (inputBox) inputBox.hide(); 
   }
+}
+function resetGame() {
+
+  bossHP = 100;
+  playerHP = 100;
+
+  words = [];
+  bloodEffects = [];
+  score = 0;
+
+  pendingDamage = 0;
+  damageTimer = 0;
+  triggeredDialogues = [];
+
+  bossDialogueTimer = 0;
+  currentBossDialogue = "";
+
+  screenShake = 0;
+
+  gameState = "play";
+
+  inputBox.show(); // 다시 등장
+  inputBox.value(""); // 입력 초기화
 }
  function drawMessage() { 
    if (messageTimer <= 0) 
@@ -245,27 +214,6 @@ function updateBossDeathScene() {
    text( messageText, windowWidth / 2, windowHeight * 0.08 );
    messageTimer--; 
  }
-
-function drawFrontLine() {
-
-  push();
-
-  imageMode(CORNER);
-
-  tint(255, 180);
-
-  // 오른쪽 영역 전체를 레이어로 덮음
- image(
-    layer,
-    frontLineX+90,
-    0,
-    width - frontLineX,
-    height
-);
-
-  pop();
-
-}
 function handlePendingDamage() {
 
   if (damageTimer > 0) {
@@ -280,7 +228,7 @@ function handlePendingDamage() {
       playerHP -= pendingDamage;
       showMessage("으악 공격 당했다!");
 
-      // 여기 수정
+      
       playerHitBlinkTimer = 30;
     }
 
@@ -310,7 +258,7 @@ function updateAttackAnimation() {
   } 
 }
 
-function monster2() {
+function monster1() {
 
   // 피격 타이머 감소
   if (monsterHitBlinkTimer > 0) {
@@ -327,7 +275,7 @@ function monster2() {
   }
 
   image(
-    monster_2,
+    monster_1,
     windowWidth * 0.85,
     windowHeight * 0.65,
     220,
@@ -389,8 +337,8 @@ function player() {
     playerHitBlinkTimer--;
   }
 }
-function stage2() {
-  background(bg2,width/2,height/2,width,height);
+function stage1() {
+  background(bg,width/2,height/2,width,height);
 
   // -------------------------
   // 전체 체력바 UI
@@ -453,28 +401,25 @@ function stage2() {
 
   fill(0);
   textSize(22);
-  text("흑사병 ",
+  text("전쟁광 수도사",
        windowWidth - windowWidth / 3.2,
        windowHeight * 0.09);
 
-  // -------------------------
   // 캐릭터 + VS
-  // -------------------------
 // 캐릭터 아이콘 
   fill(255); 
   ellipse(windowWidth * 0.13, windowHeight * 0.15, 140, 140);   imageMode(CENTER) 
   image(mainCharIcon, windowWidth * 0.13, windowHeight * 0.15, 140, 140) 
   ellipse(windowWidth * 0.87, windowHeight * 0.15, 140, 140); // VS 
   fill(255); 
-  ellipse(windowWidth / 2, windowHeight * 0.15, 80, 80);
-  image(monster2Icon, windowWidth * 0.87, windowHeight * 0.15, 150, 161) 
-  textAlign(CENTER, CENTER); 
+  ellipse(windowWidth / 2, windowHeight * 0.15, 80, 80);         textAlign(CENTER, CENTER); 
   fill(0); 
   textSize(45); 
   text("VS", windowWidth / 2, windowHeight * 0.16);
 
- 
-  //  작은 몬스터 (타자 RPG 핵심)
+  // -------------------------
+  // 🎯 작은 몬스터 (타자 RPG 핵심)
+  // -------------------------
   for (let i = words.length - 1; i >= 0; i--) {
 
     let w = words[i];
@@ -486,32 +431,11 @@ function stage2() {
     // -------------------------
     // 작은 몬스터 이미지
     // -------------------------
-    image(smallMonster2,
+    image(smallMonster1,
           w.x,
           floatY + w.offsetY - 20,
           100, 100);
 
-    // -------------------------
-    // HP BAR (몬스터 위)  -> 나중에 
-    // -------------------------
-    let barW = 50;
-    let barH = 6;
-
-    let hpRatio = w.hp / w.maxHp;
-
-    fill(0);
-    rect(w.x - barW / 2,
-         floatY + w.offsetY - 60,
-         barW,
-         barH);
-
-    fill(255, 0, 0);
-    rect(
-      w.x - barW / 2,
-      floatY + w.offsetY - 60,
-      barW * hpRatio,
-      barH
-    );
 
     // -------------------------
     // 단어 박스
@@ -530,16 +454,14 @@ function stage2() {
     // -------------------------
     // 이동
     // -------------------------
-    if (!bossDead) {
-      w.x -= w.speed;
-    }
+    w.x -= w.speed;
 
     // -------------------------
     // 플레이어 도달 데미지
     // -------------------------
-    if (!bossDead &&!w.hitPlayer &&w.x < windowWidth * 0.25) {
+    if (!w.hitPlayer && w.x < windowWidth * 0.25) {
       playerHP -= 10;
-      showMessage("실험쥐에게 물렸다!");
+      showMessage("처형견에게 물렸다!");
       playerHitBlinkTimer = 30;
       w.hitPlayer = true;
     }
@@ -564,7 +486,7 @@ function stage2() {
     }
 
     // -------------------------
-    // 화면 밖 제거
+    // 💀 화면 밖 제거
     // -------------------------
     if (w.x < -200) {
       words.splice(i, 1);
@@ -574,51 +496,23 @@ function stage2() {
 //보스 공격
 function attackBoss() {
 
-  if (bossDead) return;
-
   bossHP -= 5;
 
   monsterHitBlinkTimer = 20;
 
-  frontLineX += 25;
-
-  frontLineX = constrain(
-    frontLineX,
-    0,
-    width * 0.8
-  );
-
+  // 랜덤 피격 대사 출력
   currentBossDialogue = random(playerHitLines);
 
+  // 말풍선 2초 출력
   bossDialogueTimer = 120;
+  effectIndex = (effectIndex + 1) % 3;
+  effectTimer = 10;
 
-  //  보스 사망 처리
-  if (bossHP <= 0) {
+  isInvincible = true;
 
-    bossHP = 0;
-
-    bossDead = true;
-    bossDeathTimer = millis();
-
-    currentBossDialogue =
-      "격리 실패. 전원 처분한다…";
-
-    bossDialogueTimer = 180;
-
-    // 입력 비활성화
-    inputBox.attribute("disabled", true);
-
-    // 남은 공격 제거
-    pendingDamage = 0;
-
-    // 공격 애니메이션 중단
-    monsterAttackAnim = false;
-
-    // 작은 몬스터 정지
-    for (let w of words) {
-      w.speed = 0;
-    }
-  }
+  setTimeout(() => {
+    isInvincible = false;
+  }, 200);
 }
 //방어
 function defend() {
@@ -626,7 +520,7 @@ function defend() {
   shieldActive = true;
   shieldTimer = 40;
 
-  guardSuccess = true; // 핵심: 방어 성공 저장
+  guardSuccess = true; //: 방어 성공 저장
 
   showMessage("방어했다!");
 
@@ -645,7 +539,7 @@ function drawSpeechBubble(x, y, textStr) {
     speechBubble,
     x - 20,
     y - 70,
-    380,
+    330,
     220
   );
 
@@ -668,7 +562,7 @@ function drawShield() {
   // 펄스 효과
   let pulse = 1 + sin(frameCount * 0.2) * 0.1;
 
-  // 반투명 
+  // 반투명
   tint(255, 180);
 
   image(
@@ -700,7 +594,7 @@ function bossAttackSystem() {
     monsterAttackFrame = 0;
     monsterAttackTimer = 0;
 
-    // 여기서 HP 안 깎음 (중요)
+    // ❌ 여기서 HP 안 깎음 (중요)
     pendingDamage = 25;
     damageTimer = 60;
 
@@ -710,7 +604,7 @@ function bossAttackSystem() {
 
 //몬스터 공격 애니메이션
 function updateMonsterAttackAnimation() {
-  if (bossDead) return;
+
   if (!monsterAttackAnim) return;
 
   monsterAttackTimer++;
@@ -754,9 +648,23 @@ function showMessage(msg) {
   messageTimer = 60; // 약 1초
 }
 
+//작은 몬스터 공격 
+function smallMonsterAttack() {
+
+  for (let i = 0; i < words.length; i++) {
+
+    if (!words[i].hitPlayer && words[i].x < windowWidth * 0.25) {
+
+      playerHP -= 10;
+      showMessage("작은 몬스터에게 맞았다!");
+      playerHitBlinkTimer = 30;
+
+      words[i].hitPlayer = true;
+    }
+  }
+}
 // 단어 생성
 function makeWord() {
-  if (bossDead) return;
   let randomWord = random(wordList);
 
   words.push({
@@ -804,64 +712,32 @@ function updateBossDialogue() {
 }
 // 엔터 입력
 function checkEnter(event) {
-  if (bossDead) return;
-  
-  if (event.key !== "Enter") return;
 
-  let typed = inputBox.value();
+  if (event.key === "Enter") {
 
-  let success = false;
+    let typed = inputBox.value();
 
-  // 단어 검사
-  for (let i = words.length - 1; i >= 0; i--) {
+    for (let i = words.length - 1; i >= 0; i--) {
 
-    if (words[i].text === typed) {
+      if (words[i].text === typed) {
 
-      success = true;
+        let w = words[i];
 
-      let w = words[i];
+        // 피 효과
+        bloodEffects.push({
+          x: w.x,
+          y: w.y,
+          life: 20
+        });
 
-      // 피 효과
-      bloodEffects.push({
-        x: w.x,
-        y: w.y,
-        life: 20
-      });
-
-      // 몬스터 제거
-      words.splice(i, 1);
-
-      // 전선 넉백
-      frontLineX += 120;
-
-      // 최대 위치 제한
-      frontLineX = constrain(
-        frontLineX,
-        0,
-        width * 0.8
-      );
-
-      screenShake = 10;
-
-      showMessage("몬스터 제거 완료!");
-
-      score++;
-
-      break;
+        words.splice(i, 1);  // 딱 1번만 삭제
+        score++;
+        break;
+      }
     }
+
+    inputBox.value("");
   }
-
-  
-  if (!success) {
-
-    frontLineX -= 60;
-
-    screenShake = 20;
-
-    showMessage("으악! 오타냈다...");
-  }
-
-  inputBox.value("");
 }
 
 //피 그리는 함수
@@ -886,18 +762,33 @@ function drawBlood() {
 
 function keyPressed() {
 
-  if (bossDead) return;
+  if (gameState === "play") {
 
-  if (keyCode === RIGHT_ARROW) {
-    attackBoss();
+    if (keyCode === RIGHT_ARROW) {
+      attackBoss();
+      attackAnim = true;
+      attackFrame = 0;
+      attackTimer = 0;
+    }
 
-    attackAnim = true;
-    attackFrame = 0;
-    attackTimer = 0;
+    if (keyCode === LEFT_ARROW) {
+      defend();
+    }
   }
 
-  if (keyCode === LEFT_ARROW) {
-    defend();
+  else if (gameState === "lose") {
+
+    if (keyCode === UP_ARROW || keyCode === DOWN_ARROW) {
+      select = 1 - select; // 토글
+    }
+
+    if (keyCode === ENTER) {
+      if (select === 0) {
+        resetGame(); // 재시작
+      } else {
+        location.reload(); // 처음으로
+      }
+    }
   }
 }
 //플레이어의 체력이 0이 되면 엔딩씬 불러오기
@@ -913,13 +804,13 @@ function ending2() {
   textAlign(LEFT);
   textSize(50);
   fill(255)
-  text("#엔딩4",windowWidth / 13,windowHeight / 8)
+  text("#엔딩2",windowWidth / 13,windowHeight / 8)
   textSize(30);
   fill(0)
   text(
-  " 추후 수정 사항: \n 몬스터 사망 애니메이션,\n플레이어 쿨타임 설정 및 화면에 넣기,\n각각 스테이지 이어 붙이기,\디자인 개선,\n 엔딩 세부사항 추가",
-  windowWidth / 7,
-  windowHeight / 2
+  "개선사항: 난이도 조절\nhp마다 인물의 아이콘 바꾸기\n작은 몬스터 터지는 애니메이션 수정\n플레이어 쿨타임 설정 및 화면에 넣기\n디자인 개선",
+  windowWidth / 6,
+  windowHeight / 1.8
 );
   textAlign(CENTER);
   fill(255)
@@ -975,11 +866,11 @@ else{
 }
 //이긴 씬
 function winScene() {
-  imageMode(CORNER)
-  image(bg2, 0, 0, width, height);
+
+  image(bg, 0, 0, width, height);
 
   fill(0, 180);
-  rectMode(CENTER)
+
   rect(
     windowWidth / 2,
     windowHeight / 2,
@@ -996,15 +887,17 @@ function winScene() {
   text(
     "#승리",
     width / 2,
-    height / 7
+    height / 3.5
   );
 
-  textSize(30);
+  textSize(35);
 
   text(
-    "추후 수정 사항: \n 몬스터 사망 애니메이션,\n플레이어 쿨타임 설정 및 화면에 넣기,\n각각 스테이지 이어 붙이기,\디자인 개선,\n 엔딩 세부사항 추가",
+    "전쟁광 수도승을 쓰러뜨렸습니다.\n\n" +
+    "폐허가 된 수도원에는\n" +
+    "더 이상 광기의 기도 소리가 들리지 않습니다...",
     width / 2,
-    height / 2
+    height / 1.8
   );
 }
 // 창 크기 변경 대응
