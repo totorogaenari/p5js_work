@@ -1,0 +1,778 @@
+let scene = "start"
+
+let nameInput;
+
+let enterButton;
+
+let playerName = "";
+
+
+
+let bg;
+
+let bg1;
+
+let bg2;
+
+let mainIcon;
+
+let ownerIcon;
+
+let logo;
+
+
+
+let dialogues1;
+
+let dialogues2;
+
+let dialogues3;
+
+
+
+function setup() {
+
+  createCanvas(windowWidth, windowHeight);
+
+  fullscreen(true);
+
+  
+
+  //첫번째 
+
+  dialogues1 = [
+
+
+
+  {
+
+    speaker: "",
+    text: "밤하늘엔 검은 연기만이 떠올랐다.\n왕국의 수도, 아르덴.\n국왕의 장례식 종소리가\n 도시 전체를 뒤덮고 있었다."
+
+  },
+    
+  {
+
+    speaker: "[병사1]",
+    text: "국왕 폐하께서… 정말 돌아가신 건가?"
+
+  },
+
+
+
+  {
+
+    speaker: "[병사2]",
+    text: "후계자가 없어 왕위를 이을 사람도 없다는데... \n정말 큰일이야"
+
+  },
+
+  {
+
+    speaker: "[시민1]",
+    text: "동쪽 국경의 베르하임 놈들이 벌써 \n군대를 모은다더군."
+
+  },
+
+  {
+
+    speaker: "[시민2]",
+    text: "혼란해진 틈을 타 공격을 하려는건가. \n우린 이제 끝이야."
+
+  },
+
+   {
+
+    speaker: "[시민3]",
+    text: "전쟁이야… 전쟁이 온다고…"
+
+  },
+
+  {
+
+    speaker: "",
+    text: "(멀리서 장례식 종소리가 울린다.)"
+
+  }
+
+
+
+];
+
+  //두번째 대화씬 
+
+  dialogues2 = [
+  {
+
+    speaker: "",
+
+    text: "술집은 시끄럽고 어두웠다. \n구석 자리에는 허름한 차림의 남자가 \n술병을 붙잡은 채 앉아 있었다.",
+
+    icon: null
+  },
+
+    {
+
+    speaker: "",
+    text: "한때 왕국 최고의 용병대장이라 불렸던 남자.\n하지만 지금은 빚과 술에 찌든 \n몰락한 거지일 뿐이었다.",
+
+    icon: mainIcon
+
+  },
+  {
+
+    speaker: "[주점 주인]",
+
+    text: "야, 또 외상이냐?",
+
+    icon: ownerIcon
+
+  },
+
+
+  {
+
+    speaker: "[나]",
+
+    text: "…내 이름값 정도면 술 한 잔쯤은 줄 수 있잖아.",
+
+    icon: mainIcon
+
+  },
+
+  {
+
+    speaker: "[주점 주인]",
+
+    text: "이름값? 하!\n10년 전 전쟁 이야기로 평생 먹고살 줄 알았냐?",
+
+    icon: ownerIcon
+
+  },
+
+   {
+
+    speaker: "[시민1]",
+
+    text: "그러니까... 저 인간이 \n 그 ‘검은 사자 용병단’ 대장이었다고?"
+
+  },
+
+  {
+
+    speaker:"[시민2]",
+
+    text: "지금은 그냥 술주정뱅이잖아.\n이전까지 번 돈을 전부 도박에 탕진했다고 하더군"
+
+  },
+
+  {
+
+    speaker:"[나]",
+
+    text: ".......",
+
+    icon: mainIcon
+
+  },
+
+    
+
+  {
+
+    speaker:"",
+
+    text: "(그 순간 밖에서 비명 소리가 들린다)",
+
+    icon: null
+
+  },
+
+  {
+
+    speaker:"[여자]",
+
+    text: "도, 도둑이다!!",
+
+    icon: null
+
+  }, 
+
+  {
+
+    speaker:"[남자]",
+
+    text: "누가 좀 막아!!",
+
+    icon: null
+
+  },  
+
+  {
+
+    speaker:"",
+
+    text: "거대한 덩치의 도둑이 \n사람들을 밀치며 골목을 뛰어간다.",
+
+    icon: null
+
+  },   
+
+   {
+
+    speaker:"[주점 주인]",
+
+    text: "또 저 괴물인가. \n 몇년째 마을을 괴롭히고 있는건지 모르겠군. \n 용병들 조차 잡지 못하니 원...",
+
+    icon: ownerIcon
+
+  },
+
+  {
+
+    speaker:"[손님들]",
+
+    text: "“건드리지 마!”\n“팔 하나가 통나무만 하다던데!”",
+
+    icon: null
+
+  } 
+
+];
+
+  
+
+   //세번째 대화씬 
+
+  dialogues3 = [
+
+
+
+  {
+
+    speaker: "[도둑]",
+
+    text: "비켜라!!!",
+
+    icon: null
+
+  },
+
+
+
+  {
+
+    speaker: "[나]",
+
+    text: "으악! 이쪽으로 오잖아?",
+
+    icon: mainIcon
+
+  },
+  {
+
+    speaker: "",
+
+    text: "추가할 사항: \n 인물 아이콘 개선,\n이벤트 처리,\n효과음, bgm 추가\n디자인 개선",
+
+    icon: null
+  }
+    
+
+];
+
+}
+
+
+
+function draw() {
+
+  background(220);
+
+  if(scene === "start") {
+
+    startDraw();
+
+  } else if (scene === "Dialogue1") {
+
+    Dialogue1();
+
+  } else if (scene === "Dialogue2") {
+
+    Dialogue2();
+
+  }else if (scene === "Dialogue3") {
+
+    Dialogue3();
+
+  }
+
+  textSize(30);
+
+  text("X : "+mouseX, 50, 100);
+
+  text("Y : "+mouseY, 140, 100);
+
+  
+
+}
+
+
+
+function startDraw() {
+
+  image(bg, 0, 0, width, height);
+  
+  push()
+  imageMode(CENTER);
+  image(logo, windowWidth/2, windowHeight/5, 450, 310)
+  pop()
+  
+  rectMode(CENTER);
+  
+
+
+
+  // 설명 박스
+
+  fill(255, 180);
+
+  rect(
+
+    windowWidth / 2,
+
+    windowHeight / 1.8,
+
+    windowWidth / 1.3,
+
+    windowHeight / 3
+
+  );
+
+
+
+  // START 버튼
+
+  fill(255, 180);
+
+  rect(
+
+    windowWidth / 2,
+
+    windowHeight / 1.18,
+
+    windowWidth / 2.6,
+
+    windowHeight / 5.7
+
+  );
+
+
+
+  // 텍스트
+
+  textAlign(CENTER, CENTER);
+
+  fill(255);
+
+  textSize(20);
+
+  fill(0)
+
+  text(
+
+    "이 게임은 전쟁으로 인한 왕국을 지켜내어\n" +
+
+    "왕의 자리에 오르는 RPG 게임입니다.\n" +
+
+    "기존 RPG 게임들과 달리 타자 게임과 결합하여\n" +
+
+    "일정 시간 내에 타자를 치면 몬스터에게 공격이 가해집니다.\n" +
+
+    "플레이어는 ->로 공격, <-로 방어를 할 수 있으며\n" +
+
+    "스테이지2에서는 라인 디펜스 기능이 추가됩니다.\n" +
+
+    "몬스터는 7초마다 한번씩 공격합니다.\n"+
+    "제작자: 방윤정",
+
+
+
+    windowWidth / 2,
+
+    windowHeight / 1.8
+
+  );
+
+
+
+  textSize(45);
+
+  text(
+
+    "START",
+
+    windowWidth / 2,
+
+    windowHeight / 1.17
+
+  );
+
+}
+
+
+
+let dialogueIndex = 0;
+
+
+
+function Dialogue1() {
+
+
+
+  image(bg1, 0, 0, width, height);
+
+
+
+  fill(255, 150);
+
+  rect(
+
+    windowWidth/2,
+
+    windowHeight/1.3,
+
+    windowWidth/1.2,
+
+    windowHeight/3
+
+  );
+
+
+
+  fill(0);
+
+
+
+  // 화자 이름
+
+  textSize(28);
+
+  textAlign(LEFT, CENTER);
+
+
+
+  text(
+
+    dialogues1[dialogueIndex].speaker,
+
+    windowWidth/6,
+
+    windowHeight/1.5
+
+  );
+
+
+
+  // 대사
+
+  textSize(28);
+
+  textAlign(CENTER, CENTER);
+
+
+
+  text(
+
+    dialogues1[dialogueIndex].text,
+
+    windowWidth/2,
+
+    windowHeight/1.3
+
+  );
+
+}
+
+
+
+function Dialogue2() {
+
+
+
+  let d = dialogues2[dialogueIndex];
+
+
+
+  image(bg2, 0, 0, width, height);
+
+
+
+  fill(255, 150);
+
+  rect(
+
+    windowWidth/2,
+
+    windowHeight/1.3,
+
+    windowWidth/1.2,
+
+    windowHeight/3
+
+  );
+
+
+
+  fill(0);
+
+
+
+  // 화자 이름
+
+  textSize(28);
+
+  textAlign(LEFT, CENTER);
+
+
+
+  text(
+
+    d.speaker,
+
+    windowWidth/6,
+
+    windowHeight/1.5
+
+  );
+
+
+
+  // 대사
+
+  textSize(28);
+
+  textAlign(CENTER, CENTER);
+
+
+
+  text(
+
+    d.text,
+
+    windowWidth/2,
+
+    windowHeight/1.3
+
+  );
+
+
+
+  // 아이콘 출력
+
+  if (d.icon != null) {
+
+    image(d.icon, windowWidth/6, windowHeight/6.5, 290, 290);
+
+  }
+
+}
+
+
+
+function Dialogue3() {
+
+
+
+  let d = dialogues3[dialogueIndex];
+
+
+
+  image(bg2, 0, 0, width, height);
+
+
+
+  fill(255, 150);
+
+  rect(
+
+    windowWidth/2,
+
+    windowHeight/1.3,
+
+    windowWidth/1.2,
+
+    windowHeight/3
+
+  );
+
+
+
+  fill(0);
+
+
+
+  // 화자 이름
+
+  textSize(28);
+
+  textAlign(LEFT, CENTER);
+
+
+
+  text(
+
+    d.speaker,
+
+    windowWidth/6,
+
+    windowHeight/1.5
+
+  );
+
+
+
+  // 대사
+
+  textSize(28);
+
+  textAlign(CENTER, CENTER);
+
+
+
+  text(
+
+    d.text,
+
+    windowWidth/2,
+
+    windowHeight/1.3
+
+  );
+
+
+
+  // 아이콘 출력
+
+  if (d.icon != null) {
+
+    image(d.icon, windowWidth/6, windowHeight/6.5, 290, 290);
+
+  }
+
+}
+
+
+
+function preload() {
+
+  bg = loadImage("castle.png");
+
+  bg1 = loadImage("funeral.png");
+
+  bg2 = loadImage("bar.png");
+
+  //bg3 = loadImage("")
+
+  mainIcon = loadImage("mainChar.png");
+
+  ownerIcon = loadImage("owner.png");
+  
+  logo = loadImage("logo.png");
+
+}
+
+
+
+function mousePressed() {
+
+
+
+  // START 버튼 클릭
+
+  if (
+
+    scene === "start" &&
+
+    mouseX >= 200 &&
+
+    mouseX <= 452 &&
+
+    mouseY >= 507 &&
+
+    mouseY <= 623
+
+  ) {
+
+
+
+    scene = "Dialogue1";
+
+
+
+    // 입력창 보이기
+
+    //nameInput.show();
+
+    //enterButton.show();
+
+  }
+
+}
+
+function keyPressed() {
+
+
+
+  if (keyCode === ENTER) {
+
+
+
+    // 첫 번째 대화씬
+
+    if (scene === "Dialogue1") {
+
+      dialogueIndex++;
+
+      if (dialogueIndex >= dialogues1.length) {
+
+        scene = "Dialogue2";
+
+        dialogueIndex = 0;
+
+      }
+
+    }
+
+    // 두 번째 대화씬 
+
+    else if (scene === "Dialogue2") { 
+
+      dialogueIndex++; 
+
+      if (dialogueIndex >= dialogues2.length) { 
+
+        scene = "Dialogue3"; 
+
+        dialogueIndex = 0; 
+
+        //nameInput.show(); 
+
+        //enterButton.show(); 
+
+      } 
+
+    }
+
+
+    // 세 번째 대화씬
+    else if (scene === "Dialogue3") {
+              dialogueIndex++;
+              if (dialogueIndex >= dialogues3.length) {
+                  scene = "info";  
+                    dialogueIndex = 0;
+
+        }
+      }
+    }
+}
